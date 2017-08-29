@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+
 namespace Ui {
 class Widget;
 }
@@ -29,22 +30,26 @@ private slots:
     void operatorClicked();
 
     void on_pointBtn_clicked();
+protected:
+
 
 private:
-    bool calculate(double operand, QString pendingOperator);
-    //终止运算，清除数据，报错
+    //将表达式转化为后缀表达式
+    QString inToPost(QString infix) throw(const char*);
+    //计算后缀表达式的结果
+    double compute(QString s) throw(const char*);
+    //终止运算，报错
     void abortOperation();
-    //连接信号和槽
-    void connectSlots();
     //初始化界面
     void initUi();
+    //连接信号和槽
+    void connectSlots();
     //设置键盘按键
     void setShortcutKeys();
 
     Ui::Widget *ui;
-    QString pendingOperator;
-    double result;
     bool waitForOperand;
+    QString error;
 
 };
 
