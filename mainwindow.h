@@ -14,6 +14,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
 private slots:
     void on_clearBtn_clicked();
 
@@ -29,6 +30,12 @@ private slots:
 
     void on_pointBtn_clicked();
 
+
+
+    void on_action_2_triggered();
+
+    void on_action_3_triggered();
+
     void on_action_triggered();
 
 private:
@@ -36,18 +43,23 @@ private:
     QString inToPost(QString infix) throw(const char*);
     //计算后缀表达式的结果
     double compute(QString s) throw(const char*);
+    //终止运算并打印出错信息
     void abortOperation();
+    //获取当前表达式的值
+    QString currentText();
+    //设置当前行的值
+    void setCurrentText(QString text);
     //初始化界面
     void initUi();
     //连接信号和槽
     void connectSlots();
-    //设置快捷键
+    //设置键盘按键
     void setShortcutKeys();
 
     Ui::MainWindow *ui;
-    bool waitForOperand;
+    bool waitForOperator;
     QString error;
-
+    QString log;
 };
 
 #endif // MAINWINDOW_H

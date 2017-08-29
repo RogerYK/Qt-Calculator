@@ -6,15 +6,16 @@
 #include <QDebug>
 #include <map>
 #include <stack>
-#include <cmath>
+#include <QTextBlock>
 #include <QClipboard>
+#include <QScrollBar>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     initUi();
-    waitForOperand = true;
+    waitForOperator = false;
     connectSlots();
     setShortcutKeys();
 }
@@ -26,40 +27,46 @@ MainWindow::~MainWindow()
 
 void MainWindow::abortOperation()
 {
-    ui->lineEdit->setText("0");
-    waitForOperand = true;
-    QMessageBox::warning(this, "运算错误", error);
+    setCurrentText("0");
+    waitForOperator = true;
+    statusBar()->showMessage(error, 4000);
 }
 
 void MainWindow::digitClicked()
 {
     QPushButton *digitBtn = static_cast<QPushButton*>(sender());
     QString value = digitBtn->text();
-    if(ui->lineEdit->text() == "0" && value == "0")
+    QString current = currentText();
+    if(current == "0" && value == "0")
         return;
-    if(waitForOperand)
+    if(waitForOperator)
     {
-        ui->lineEdit->setText(value);
-        waitForOperand = false;
+        log.append(current + '\n');
+        ui->textEdit->append(value);
+        ui->textEdit->moveCursor(QTextCursor::End);
+        waitForOperator = false;
     }
     else
     {
-        ui->lineEdit->setText(ui->lineEdit->text() + value);
+        if(current != "0")
+            setCurrentText(current + value);
+        else
+            setCurrentText(value);
     }
 }
 
 void MainWindow::on_clearBtn_clicked()
 {
     //将当前显示的数归零
-    ui->lineEdit->setText("0");
-    waitForOperand = true;
+    setCurrentText("0");
+    waitForOperator = false;
 }
 
 void MainWindow::on_clearAllBtn_clicked()
 {
     //将当前显示的数据归零，并将之前保存的数据运算清除
-    ui->lineEdit->setText("0");
-    waitForOperand = true;
+    ui->textEdit->setText("0");
+    waitForOperator = false;
 }
 
 void MainWindow::on_equalBtn_clicked()
@@ -67,7 +74,7 @@ void MainWindow::on_equalBtn_clicked()
     double result = 0.0;
     try
     {
-        result = compute(inToPost(ui->lineEdit->text()));
+        result = compute(inToPost(currentText()));
     }
     catch(const char *er)
     {
@@ -75,44 +82,44 @@ void MainWindow::on_equalBtn_clicked()
         abortOperation();
         return;
     }
-    ui->lineEdit->setText(ui->lineEdit->text() + '=' + QString::number(result));
-    waitForOperand = true;
+    log.append(currentText() + '\n');
+    ui->textEdit->append(QString::number(result));
+    ui->textEdit->moveCursor(QTextCursor::End);
+    waitForOperator = true;
 }
 
 void MainWindow::on_signBtn_clicked()
 {
-    QString text = ui->lineEdit->text();
-    QChar sign = text[text.size() - 1];
-    if(sign == '-')
+    QString current = currentText();
+    if (waitForOperator)
     {
-        text.remove(text.size() - 1, 1);
+        log.append(current + '\n');
+        ui->textEdit->append("-");
+        ui->textEdit->moveCursor(QTextCursor::End);
+        waitForOperator = false;
     }
     else
     {
-        text.append('-');
+        if (current[0] == '-')
+            current[0] = '+';
+        else
+            current[0] = '-';
+        setCurrentText(current);
     }
-    ui->lineEdit->setText(text);
 }
 
 void MainWindow::operatorClicked()
 {
     QPushButton *clickedBtn = qobject_cast<QPushButton *>(sender());
     QString clickedOperator = clickedBtn->text();
-    if (waitForOperand)
-    {
-        ui->lineEdit->setText(clickedOperator);
-        waitForOperand = false;
-    }
-    else
-        ui->lineEdit->setText(ui->lineEdit->text() + clickedOperator);
+    setCurrentText(currentText() + clickedOperator);
+    waitForOperator = false;
 }
 
 void MainWindow::on_pointBtn_clicked()
 {
-    if (waitForOperand)
-        ui->lineEdit->setText("0");
-    ui->lineEdit->setText(ui->lineEdit->text() + ".");
-    waitForOperand = false;
+    setCurrentText(currentText() + ".");
+    waitForOperator = false;
 }
 
 QString MainWindow::inToPost(QString infix) throw(const char*)
@@ -190,7 +197,7 @@ QString MainWindow::inToPost(QString infix) throw(const char*)
             stack.pop();
             break;
         default:
-            throw "expression has illegality character";
+            throw "表达式中含有非法字符";
             break;
         }
     }
@@ -199,7 +206,7 @@ QString MainWindow::inToPost(QString infix) throw(const char*)
         if(infix[infix.size()-1].isDigit())
             postfix.push_back('#');
         else
-            throw "expression is illegality";
+            throw "表达式非法";
     }
     while(!stack.empty())
     {
@@ -213,7 +220,7 @@ QString MainWindow::inToPost(QString infix) throw(const char*)
 double MainWindow::compute(QString s) throw(const char*)
 {
     std::stack<double> stack;
-    QString str;
+    QString str("0");
     double curr;
 
     double  temNum1;
@@ -277,7 +284,7 @@ double MainWindow::compute(QString s) throw(const char*)
             stack.push(curr);
             break;
         default:
-            throw "expression has illegality character";
+            throw "表达式中含有非法字符";
             break;
         }
     }
@@ -285,17 +292,48 @@ double MainWindow::compute(QString s) throw(const char*)
     return curr;
 }
 
+QString MainWindow::currentText()
+{
+    QTextDocument *document = ui->textEdit->document();
+    QTextBlock block = document->lastBlock();
+    return block.text();
+}
+
+void MainWindow::setCurrentText(QString text)
+{
+    QString allText = ui->textEdit->toPlainText();
+    int pos = allText.lastIndexOf('\n');
+    if(pos >= 0)
+        allText.replace(allText.lastIndexOf('\n') + 1, allText.size(), text);
+    else
+        allText = text;
+    ui->textEdit->setText(allText);
+    ui->textEdit->moveCursor(QTextCursor::End);
+}
+
+void MainWindow::on_action_2_triggered()
+{
+    ui->textEdit->setText(log);
+    setCurrentText("0");
+    waitForOperator = false;
+}
+
+void MainWindow::on_action_3_triggered()
+{
+    log.clear();
+}
+
 void MainWindow::on_action_triggered()
 {
     QClipboard *board = QApplication::clipboard();
     QString text = board->text();
-    ui->lineEdit->setText(text);
+    ui->textEdit->append(text);
 }
 
 void MainWindow::initUi()
 {
     ui->setupUi(this);
-    ui->lineEdit->setText("0");
+    setCurrentText("0");
 }
 
 void MainWindow::connectSlots()
