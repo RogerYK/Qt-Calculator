@@ -1,23 +1,28 @@
 #include "widget.h"
 #include "ui_widget.h"
 #include <QMessageBox>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QShortcut>
+#include <QDebug>
 
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
 {
-    ui->setupUi(this);
-    ui->lineEdit->setText("0");
+    initUi();
+
     result = 0.0;
     waitForOperand = true;
-
     connectSlots();
+    setShortcutKeys();
 }
 
 Widget::~Widget()
 {
     delete ui;
 }
+
 bool Widget::calculate(double operand, QString pendingOperator)
 {
     if(pendingOperator == "+")
@@ -148,17 +153,44 @@ void Widget::on_pointBtn_clicked()
 
 void Widget::connectSlots()
 {
-
     QPushButton *digitBtns[10] = {
-        ui->digitBtn0,      ui->digitBtn1,          ui->digitBtn2,          ui->digitBtn3,
-        ui->digitBtn4,      ui->digitBtn5,          ui->digitBtn6,          ui->digitBtn7,
-        ui->digitBtn8,      ui->digitBtn9
+            ui->digitBtn0,      ui->digitBtn1,          ui->digitBtn2,          ui->digitBtn3,
+            ui->digitBtn4,      ui->digitBtn5,          ui->digitBtn6,          ui->digitBtn7,
+            ui->digitBtn8,      ui->digitBtn9
+        };
+        for (auto btn : digitBtns)
+            connect(btn, &QPushButton::clicked, this, &Widget::digitClicked);
+        QPushButton *operatorBtns[4] = {
+            ui->addBtn,         ui->subtractionBtn,     ui->multiplicationBtn,  ui->divisionBtn
+        };
+        for (auto btn : operatorBtns)
+            connect(btn, &QPushButton::clicked, this, &Widget::operatorClicked);
+}
+
+void Widget::initUi()
+{
+    ui->setupUi(this);
+    ui->lineEdit->setText("0");
+    setWindowFlags(windowFlags() & ~(Qt::WindowMaximizeButtonHint));
+}
+
+void Widget::setShortcutKeys()
+{
+    Qt::Key key[18] = {
+        Qt::Key_0,      Qt::Key_1,      Qt::Key_2,          Qt::Key_3,
+        Qt::Key_4,      Qt::Key_5,      Qt::Key_6,          Qt::Key_7,
+        Qt::Key_8,      Qt::Key_9,
+        Qt::Key_Plus,   Qt::Key_Minus,  Qt::Key_Asterisk,   Qt::Key_Slash,
+        Qt::Key_Enter,  Qt::Key_Period, Qt::Key_Backspace,  Qt::Key_M
     };
-    for (auto btn : digitBtns)
-        connect(btn, &QPushButton::clicked, this, &Widget::digitClicked);
-    QPushButton *operatorBtns[4] = {
-        ui->addBtn,         ui->subtractionBtn,     ui->mulBtn,  ui->divisionBtn,
+    QPushButton *btn[18] = {
+        ui->digitBtn0,  ui->digitBtn1,      ui->digitBtn2,          ui->digitBtn3,
+        ui->digitBtn4,  ui->digitBtn5,      ui->digitBtn6,          ui->digitBtn7,
+        ui->digitBtn8,  ui->digitBtn9,
+        ui->addBtn,     ui->subtractionBtn, ui->multiplicationBtn,  ui->divisionBtn,
+        ui->equalBtn,   ui->pointBtn,       ui->clearBtn,           ui->signBtn
     };
-    for (auto btn : operatorBtns)
-        connect(btn, &QPushButton::clicked, this, &Widget::operatorClicked);
+    for (int i = 0; i < 18; i++)
+        btn[i]->setShortcut(QKeySequence(key[i]));
+    ui->clearAllBtn->setShortcut(QKeySequence("Ctrl+Backspace"));
 }

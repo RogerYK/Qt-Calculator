@@ -14,6 +14,7 @@ class Widget : public QWidget
 public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
+
 private slots:
     void on_clearBtn_clicked();
 
@@ -35,14 +36,16 @@ private:
     void abortOperation();
     //连接信号和槽
     void connectSlots();
-    //储存运算符
-    QString pendingOperator;
-    //储存运算结果
-    double result;
-    //标记是否等待一个操作数
-    bool waitForOperand;
+    //初始化界面
+    void initUi();
+    //设置键盘按键
+    void setShortcutKeys();
 
     Ui::Widget *ui;
+    QString pendingOperator;
+    double result;
+    bool waitForOperand;
+
 };
 
 #endif // WIDGET_H
