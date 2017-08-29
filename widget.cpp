@@ -148,18 +148,17 @@ void Widget::on_pointBtn_clicked()
 
 void Widget::connectSlots()
 {
-    connect(ui->digitBnt0, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn1, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn2, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn3, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn4, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn5, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn6, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn7, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn8, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->digitBtn9, &QPushButton::clicked, this, &Widget::digitClicked);
-    connect(ui->mulBtn, &QPushButton::clicked, this, &Widget::operatorClicked);
-    connect(ui->divisionBtn, &QPushButton::clicked, this, &Widget::operatorClicked);
-    connect(ui->addBtn, &QPushButton::clicked, this, &Widget::operatorClicked);
-    connect(ui->subtractionBtn, &QPushButton::clicked, this, &Widget::operatorClicked);
+
+    QPushButton *digitBtns[10] = {
+        ui->digitBtn0,      ui->digitBtn1,          ui->digitBtn2,          ui->digitBtn3,
+        ui->digitBtn4,      ui->digitBtn5,          ui->digitBtn6,          ui->digitBtn7,
+        ui->digitBtn8,      ui->digitBtn9
+    };
+    for (auto btn : digitBtns)
+        connect(btn, &QPushButton::clicked, this, &Widget::digitClicked);
+    QPushButton *operatorBtns[4] = {
+        ui->addBtn,         ui->subtractionBtn,     ui->mulBtn,  ui->divisionBtn,
+    };
+    for (auto btn : operatorBtns)
+        connect(btn, &QPushButton::clicked, this, &Widget::operatorClicked);
 }
