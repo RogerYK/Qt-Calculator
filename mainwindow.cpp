@@ -1,5 +1,5 @@
-#include "widget.h"
-#include "ui_widget.h"
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -7,10 +7,11 @@
 #include <map>
 #include <stack>
 #include <cmath>
+#include <QClipboard>
 
-Widget::Widget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Widget)
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
     initUi();
     waitForOperand = true;
@@ -18,21 +19,19 @@ Widget::Widget(QWidget *parent) :
     setShortcutKeys();
 }
 
-Widget::~Widget()
+MainWindow::~MainWindow()
 {
     delete ui;
 }
 
-
-
-void Widget::abortOperation()
+void MainWindow::abortOperation()
 {
     ui->lineEdit->setText("0");
     waitForOperand = true;
     QMessageBox::warning(this, "运算错误", error);
 }
 
-void Widget::digitClicked()
+void MainWindow::digitClicked()
 {
     QPushButton *digitBtn = static_cast<QPushButton*>(sender());
     QString value = digitBtn->text();
@@ -49,21 +48,21 @@ void Widget::digitClicked()
     }
 }
 
-void Widget::on_clearBtn_clicked()
+void MainWindow::on_clearBtn_clicked()
 {
     //将当前显示的数归零
     ui->lineEdit->setText("0");
     waitForOperand = true;
 }
 
-void Widget::on_clearAllBtn_clicked()
+void MainWindow::on_clearAllBtn_clicked()
 {
     //将当前显示的数据归零，并将之前保存的数据运算清除
     ui->lineEdit->setText("0");
     waitForOperand = true;
 }
 
-void Widget::on_equalBtn_clicked()
+void MainWindow::on_equalBtn_clicked()
 {
     double result = 0.0;
     try
@@ -80,7 +79,7 @@ void Widget::on_equalBtn_clicked()
     waitForOperand = true;
 }
 
-void Widget::on_signBtn_clicked()
+void MainWindow::on_signBtn_clicked()
 {
     QString text = ui->lineEdit->text();
     QChar sign = text[text.size() - 1];
@@ -95,7 +94,7 @@ void Widget::on_signBtn_clicked()
     ui->lineEdit->setText(text);
 }
 
-void Widget::operatorClicked()
+void MainWindow::operatorClicked()
 {
     QPushButton *clickedBtn = qobject_cast<QPushButton *>(sender());
     QString clickedOperator = clickedBtn->text();
@@ -108,7 +107,7 @@ void Widget::operatorClicked()
         ui->lineEdit->setText(ui->lineEdit->text() + clickedOperator);
 }
 
-void Widget::on_pointBtn_clicked()
+void MainWindow::on_pointBtn_clicked()
 {
     if (waitForOperand)
         ui->lineEdit->setText("0");
@@ -116,7 +115,7 @@ void Widget::on_pointBtn_clicked()
     waitForOperand = false;
 }
 
-QString Widget::inToPost(QString infix) throw(const char*)
+QString MainWindow::inToPost(QString infix) throw(const char*)
 {
     std::stack<char> stack;
     char current = 0;//读入的字符
@@ -144,7 +143,6 @@ QString Widget::inToPost(QString infix) throw(const char*)
         case '*':
         case '/':
         case '^':
-            //postfix.push_back('#');
             if(i > 0)    //如果运算符的前一项不是右括号则说明前一个数字输入完毕，用#标识前面几个字符组成一个数字
              {
                 if (infix[i-1] != ')')
@@ -212,7 +210,7 @@ QString Widget::inToPost(QString infix) throw(const char*)
     return postfix;
 }
 
-double Widget::compute(QString s) throw(const char*)
+double MainWindow::compute(QString s) throw(const char*)
 {
     std::stack<double> stack;
     QString str;
@@ -287,14 +285,20 @@ double Widget::compute(QString s) throw(const char*)
     return curr;
 }
 
-void Widget::initUi()
+void MainWindow::on_action_triggered()
+{
+    QClipboard *board = QApplication::clipboard();
+    QString text = board->text();
+    ui->lineEdit->setText(text);
+}
+
+void MainWindow::initUi()
 {
     ui->setupUi(this);
     ui->lineEdit->setText("0");
-    setWindowFlags(windowFlags() & ~(Qt::WindowMaximizeButtonHint));
 }
 
-void Widget::connectSlots()
+void MainWindow::connectSlots()
 {
     QPushButton *digitBtns[10] = {
             ui->digitBtn0,      ui->digitBtn1,          ui->digitBtn2,          ui->digitBtn3,
@@ -302,18 +306,17 @@ void Widget::connectSlots()
             ui->digitBtn8,      ui->digitBtn9
         };
         for (auto btn : digitBtns)
-            connect(btn, &QPushButton::clicked, this, &Widget::digitClicked);
+            connect(btn, &QPushButton::clicked, this, &MainWindow::digitClicked);
         QPushButton *operatorBtns[7] = {
             ui->addBtn,         ui->subtractionBtn,     ui->multiplicationBtn,  ui->divisionBtn,
             ui->leftBracketBtn, ui->rightBracketBtn,    ui->powBtn
         };
         for (auto btn : operatorBtns)
-            connect(btn, &QPushButton::clicked, this, &Widget::operatorClicked);
+            connect(btn, &QPushButton::clicked, this, &MainWindow::operatorClicked);
 }
 
-void Widget::setShortcutKeys()
+void MainWindow::setShortcutKeys()
 {
-
     Qt::Key key[21] = {
         Qt::Key_0,          Qt::Key_1,          Qt::Key_2,          Qt::Key_3,
         Qt::Key_4,          Qt::Key_5,          Qt::Key_6,          Qt::Key_7,
@@ -333,4 +336,5 @@ void Widget::setShortcutKeys()
     for (int i = 0; i < 21; i++)
         btn[i]->setShortcut(QKeySequence(key[i]));
     ui->clearAllBtn->setShortcut(QKeySequence("Ctrl+Backspace"));
+
 }

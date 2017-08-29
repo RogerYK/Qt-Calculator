@@ -1,21 +1,19 @@
-#ifndef WIDGET_H
-#define WIDGET_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
-#include <QWidget>
-
+#include <QMainWindow>
 
 namespace Ui {
-class Widget;
+class MainWindow;
 }
 
-class Widget : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit Widget(QWidget *parent = 0);
-    ~Widget();
-
+    explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 private slots:
     void on_clearBtn_clicked();
 
@@ -30,27 +28,26 @@ private slots:
     void operatorClicked();
 
     void on_pointBtn_clicked();
-protected:
 
+    void on_action_triggered();
 
 private:
     //将表达式转化为后缀表达式
     QString inToPost(QString infix) throw(const char*);
     //计算后缀表达式的结果
     double compute(QString s) throw(const char*);
-    //终止运算，报错
     void abortOperation();
     //初始化界面
     void initUi();
     //连接信号和槽
     void connectSlots();
-    //设置键盘按键
+    //设置快捷键
     void setShortcutKeys();
 
-    Ui::Widget *ui;
+    Ui::MainWindow *ui;
     bool waitForOperand;
     QString error;
 
 };
 
-#endif // WIDGET_H
+#endif // MAINWINDOW_H
