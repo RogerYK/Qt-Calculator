@@ -36,6 +36,10 @@ private slots:
 
     void on_action_3_triggered();
 
+    void on_action_4_triggered(bool checked);
+
+    void specialOperatorClicked();
+
     void on_action_triggered();
 
 private:
@@ -47,7 +51,7 @@ private:
     void abortOperation();
     //获取当前表达式的值
     QString currentText();
-    //设置当前行的值
+    //设置当前算式
     void setCurrentText(QString text);
     //初始化界面
     void initUi();
